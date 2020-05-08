@@ -1,12 +1,10 @@
 import extmem
-from basic import generateRS
-from basic import write_r_to_disk
-from basic import write_s_to_disk
-from basic import print_R_S
-import numpy as np
+from basic_method import generator
+from basic_method import WriteRtoDisk
+from basic_method import WriteStoDisk
 
 
-def liner_selection(buffer):
+def liner_select(buffer):
     num = 0
     for i in range(16):
         addr = "r" + str(i)
@@ -17,7 +15,6 @@ def liner_selection(buffer):
             if (a == 40):
                 print("Relation_R", a, b)
                 num += 1
-                # buffer.writeBlockToDisk("liner_selection_result_R"+str(cnt),cnt)
                 buffer.data[1].append(a)
                 buffer.data[1].append(b)
                 if num % 7 == 0:
@@ -48,12 +45,11 @@ def liner_selection(buffer):
         buffer.freeBlockInBuffer(1)
 
 
-# x=0-55
-def get_buffer_data(buffer, x):
+def get_bufferdata(buffer, x):
     return int(buffer.data[x // 7][2 * (x % 7)])
 
 
-def swap_buffer_data(buffer, b1, d1, b2, d2):
+def swap_bufferdata(buffer, b1, d1, b2, d2):
     t1 = buffer.data[b2][d2 * 2]
     t2 = buffer.data[b2][d2 * 2 + 1]
     buffer.data[b2][d2 * 2] = buffer.data[b1][d1 * 2]
@@ -65,15 +61,15 @@ def swap_buffer_data(buffer, b1, d1, b2, d2):
 def sort_buffer(buffer):
     for i in range(55):
         for j in range(55 - i):
-            if int(get_buffer_data(buffer, j)) > int(get_buffer_data(buffer, j + 1)):
-                swap_buffer_data(buffer, j // 7, j % 7, (j + 1) // 7, (j + 1) % 7)
+            if int(get_bufferdata(buffer, j)) > int(get_bufferdata(buffer, j + 1)):
+                swap_bufferdata(buffer, j // 7, j % 7, (j + 1) // 7, (j + 1) % 7)
 
 
-def lower_bound(buffer, key, first, len):
+def low_bound(buffer, key, first, len):
     while len > 0:
         half = len // 2
         middle = first + half
-        if get_buffer_data(buffer, middle) < key:
+        if get_bufferdata(buffer, middle) < key:
             first = middle + 1
             len = len - half - 1
         else:
@@ -81,32 +77,32 @@ def lower_bound(buffer, key, first, len):
     return first
 
 
-def merge_sort_R(buffer):
+def merge_sort_forR(buffer):
     for i in range(8):
         buffer.freeBlockInBuffer(i)
-    # r1
+    # 先读八块排好八块
     for i in range(8):
         buffer.readBlockFromDisk("r" + str(i))
     sort_buffer(buffer);
     for i in range(8):
         buffer.writeBlockToDisk("sort_R" + str(i), i)
-    # r2
+    # 再读八块排好八块
     for i in range(8, 16):
         buffer.readBlockFromDisk("r" + str(i))
     sort_buffer(buffer)
     for i in range(8):
         buffer.writeBlockToDisk("sort_R" + str(i + 8), i)
-    # merge sort R
-    cnt = 0
-    f1 = 0
-    f2 = 0
+    # 二路归并合并（这里只用了三块）
+    counter = 0
+    file1 = 0
+    file2 = 0
     i = 0
     j = 0
-    b1 = buffer.readBlockFromDisk("sort_R" + str(f1))
-    b2 = buffer.readBlockFromDisk("sort_R" + str(f2 + 8))
+    b1 = buffer.readBlockFromDisk("sort_R" + str(file1))
+    b2 = buffer.readBlockFromDisk("sort_R" + str(file2 + 8))
     n = buffer.getNewBlockInBuffer()
     result_num = 0
-    while f1 != 8 and f2 != 8:
+    while file1 != 8 and file2 != 8:
         if int(buffer.data[b1][2 * i]) < int(buffer.data[b2][2 * j]):
             a = buffer.data[b1][2 * i]
             b = buffer.data[b1][2 * i + 1]
@@ -117,56 +113,56 @@ def merge_sort_R(buffer):
             j += 1
         buffer.data[n].append(a)
         buffer.data[n].append(b)
-        cnt += 1
+        counter += 1
         if i == 7:
-            f1 += 1
+            file1 += 1
             i = 0
-            if f1 < 8:
+            if file1 < 8:
                 buffer.freeBlockInBuffer(b1)
-                b1 = buffer.readBlockFromDisk("sort_R" + str(f1))
+                b1 = buffer.readBlockFromDisk("sort_R" + str(file1))
         if j == 7:
-            f2 += 1
+            file2 += 1
             j = 0
-            if f2 < 8:
+            if file2 < 8:
                 buffer.freeBlockInBuffer(b2)
-                b2 = buffer.readBlockFromDisk("sort_R" + str(f2 + 8))
-        if cnt % 7 == 0:
+                b2 = buffer.readBlockFromDisk("sort_R" + str(file2 + 8))
+        if counter % 7 == 0:
             buffer.writeBlockToDisk("binary_selection_temp_R" + str(result_num), n)
             n = buffer.getNewBlockInBuffer()
             result_num += 1
-    if f1 == 8:
-        while f2 != 8:
+    if file1 == 8:
+        while file2 != 8:
             a = buffer.data[b2][2 * j]
             b = buffer.data[b2][2 * j + 1]
             buffer.data[n].append(a)
             buffer.data[n].append(b)
             j += 1
-            cnt += 1
+            counter += 1
             if j == 7:
-                f2 += 1
+                file2 += 1
                 j = 0
-                if f2 < 8:
+                if file2 < 8:
                     buffer.freeBlockInBuffer(b2)
-                    b2 = buffer.readBlockFromDisk("sort_R" + str(f2 + 8))
-            if cnt % 7 == 0:
+                    b2 = buffer.readBlockFromDisk("sort_R" + str(file2 + 8))
+            if counter % 7 == 0:
                 buffer.writeBlockToDisk("binary_selection_temp_R" + str(result_num), n)
                 n = buffer.getNewBlockInBuffer()
                 result_num += 1
-    elif f2 == 8:
-        while f1 != 8:
+    elif file2 == 8:
+        while file1 != 8:
             a = buffer.data[b1][2 * i]
             b = buffer.data[b1][2 * i + 1]
             buffer.data[n].append(a)
             buffer.data[n].append(b)
             i += 1
-            cnt += 1
+            counter += 1
             if i == 7:
-                f1 += 1
+                file1 += 1
                 i = 0
-                if f1 < 8:
+                if file1 < 8:
                     buffer.freeBlockInBuffer(b1)
-                    b1 = buffer.readBlockFromDisk("sort_R" + str(f1))
-            if cnt % 7 == 0:
+                    b1 = buffer.readBlockFromDisk("sort_R" + str(file1))
+            if counter % 7 == 0:
                 buffer.writeBlockToDisk("binary_selection_temp_R" + str(result_num), n)
                 n = buffer.getNewBlockInBuffer()
                 result_num += 1
@@ -174,9 +170,9 @@ def merge_sort_R(buffer):
         buffer.freeBlockInBuffer(i)
 
 
-def binary_search_R(buffer):
+def binary_search_forR(buffer):
     key = 40
-    cnt = 0
+    counter = 0
     result_num = 0
     for i in range(4):
         buffer.getNewBlockInBuffer()
@@ -185,39 +181,39 @@ def binary_search_R(buffer):
         for i in range(4):
             buffer.freeBlockInBuffer(i)
             buffer.readBlockFromDisk("binary_selection_temp_R" + str(4 * k + i))
-        if key > get_buffer_data(buffer, 27) or key < get_buffer_data(buffer, 0):
+        if key > get_bufferdata(buffer, 27) or key < get_bufferdata(buffer, 0):
             continue
         first = 0
         len = 28
-        l1 = lower_bound(buffer, 40, first, len)
-        l2 = lower_bound(buffer, 41, first, len)
+        l1 = low_bound(buffer, 40, first, len)
+        l2 = low_bound(buffer, 41, first, len)
         for i in range(l1, l2):
             a = buffer.data[i // 7][2 * (i % 7)]
             b = buffer.data[i // 7][2 * (i % 7) + 1]
             buffer.data[n].append(a)
             buffer.data[n].append(b)
             print("Relation_R", a, b)
-            cnt += 1
-            if cnt % 7 == 0:
+            counter += 1
+            if counter % 7 == 0:
                 buffer.writeBlockToDisk("binary_selection_result_R" + str(result_num), n)
                 result_num += 1
                 n = buffer.getNewBlockInBuffer()
-    if cnt % 7 != 0:
+    if counter % 7 != 0:
         buffer.writeBlockToDisk("binary_selection_result_R" + str(result_num), n)
     for i in range(8):
         buffer.freeBlockInBuffer(i)
 
 
 def temp_merge_S(buffer, p1, p2, result_num):
-    cnt = 0
-    f1 = 0
-    f2 = 0
+    counter = 0
+    file1 = 0
+    file2 = 0
     i = 0
     j = 0
-    b1 = buffer.readBlockFromDisk("sort_S" + str(f1 + p1))
-    b2 = buffer.readBlockFromDisk("sort_S" + str(f2 + p2))
+    b1 = buffer.readBlockFromDisk("sort_S" + str(file1 + p1))
+    b2 = buffer.readBlockFromDisk("sort_S" + str(file2 + p2))
     n = buffer.getNewBlockInBuffer()
-    while f1 != 8 and f2 != 8:
+    while file1 != 8 and file2 != 8:
         if int(buffer.data[b1][2 * i]) < int(buffer.data[b2][2 * j]):
             a = buffer.data[b1][2 * i]
             b = buffer.data[b1][2 * i + 1]
@@ -228,56 +224,56 @@ def temp_merge_S(buffer, p1, p2, result_num):
             j += 1
         buffer.data[n].append(a)
         buffer.data[n].append(b)
-        cnt += 1
+        counter += 1
         if i == 7:
-            f1 += 1
+            file1 += 1
             i = 0
-            if f1 < 8:
+            if file1 < 8:
                 buffer.freeBlockInBuffer(b1)
-                b1 = buffer.readBlockFromDisk("sort_S" + str(f1 + p1))
+                b1 = buffer.readBlockFromDisk("sort_S" + str(file1 + p1))
         if j == 7:
-            f2 += 1
+            file2 += 1
             j = 0
-            if f2 < 8:
+            if file2 < 8:
                 buffer.freeBlockInBuffer(b2)
-                b2 = buffer.readBlockFromDisk("sort_S" + str(f2 + p2))
-        if cnt % 7 == 0:
+                b2 = buffer.readBlockFromDisk("sort_S" + str(file2 + p2))
+        if counter % 7 == 0:
             buffer.writeBlockToDisk("binary_selection_temp_S" + str(result_num), n)
             n = buffer.getNewBlockInBuffer()
             result_num += 1
-    if f1 == 8:
-        while f2 != 8:
+    if file1 == 8:
+        while file2 != 8:
             a = buffer.data[b2][2 * j]
             b = buffer.data[b2][2 * j + 1]
             buffer.data[n].append(a)
             buffer.data[n].append(b)
             j += 1
-            cnt += 1
+            counter += 1
             if j == 7:
-                f2 += 1
+                file2 += 1
                 j = 0
-                if f2 < 8:
+                if file2 < 8:
                     buffer.freeBlockInBuffer(b2)
-                    b2 = buffer.readBlockFromDisk("sort_S" + str(f2 + p2))
-            if cnt % 7 == 0:
+                    b2 = buffer.readBlockFromDisk("sort_S" + str(file2 + p2))
+            if counter % 7 == 0:
                 buffer.writeBlockToDisk("binary_selection_temp_S" + str(result_num), n)
                 n = buffer.getNewBlockInBuffer()
                 result_num += 1
-    elif f2 == 8:
-        while f1 != 8:
+    elif file2 == 8:
+        while file1 != 8:
             a = buffer.data[b1][2 * i]
             b = buffer.data[b1][2 * i + 1]
             buffer.data[n].append(a)
             buffer.data[n].append(b)
             i += 1
-            cnt += 1
+            counter += 1
             if i == 7:
-                f1 += 1
+                file1 += 1
                 i = 0
-                if f1 < 8:
+                if file1 < 8:
                     buffer.freeBlockInBuffer(b1)
-                    b1 = buffer.readBlockFromDisk("sort_S" + str(f1 + p1))
-            if cnt % 7 == 0:
+                    b1 = buffer.readBlockFromDisk("sort_S" + str(file1 + p1))
+            if counter % 7 == 0:
                 buffer.writeBlockToDisk("binary_selection_temp_S" + str(result_num), n)
                 n = buffer.getNewBlockInBuffer()
                 result_num += 1
@@ -285,46 +281,47 @@ def temp_merge_S(buffer, p1, p2, result_num):
         buffer.freeBlockInBuffer(i)
 
 
-def merge_sort_S(buffer):
+def merge_sort_forS(buffer):
     for i in range(8):
         buffer.freeBlockInBuffer(i)
-    # s1
+    # 先排好八块
     for i in range(8):
         buffer.readBlockFromDisk("s" + str(i))
     sort_buffer(buffer);
     for i in range(8):
         buffer.writeBlockToDisk("sort_S" + str(i), i)
-    # s2
+    # 再排好八块
     for i in range(8, 16):
         buffer.readBlockFromDisk("s" + str(i))
     sort_buffer(buffer)
     for i in range(8):
         buffer.writeBlockToDisk("sort_S" + str(i + 8), i)
-    # s3
+    # 再排好八块
     for i in range(16, 24):
         buffer.readBlockFromDisk("s" + str(i))
     sort_buffer(buffer);
     for i in range(8):
         buffer.writeBlockToDisk("sort_S" + str(i + 16), i)
-    # s4
+    # 最后排好八块
     for i in range(24, 32):
         buffer.readBlockFromDisk("s" + str(i))
     sort_buffer(buffer)
     for i in range(8):
         buffer.writeBlockToDisk("sort_S" + str(i + 24), i)
     # merge sort S
-    temp_merge_S(buffer, 0, 8, 0)  # 0-16
-    temp_merge_S(buffer, 16, 24, 16)  # 16-24
+    temp_merge_S(buffer, 0, 8, 0)  # 合并0-16块
+    temp_merge_S(buffer, 16, 24, 16)  # 合并16-32块
+    # 再进行一次二路归并
     result_num = 0
-    cnt = 0
-    f1 = 0
-    f2 = 0
+    counter = 0
+    file1 = 0
+    file2 = 0
     i = 0
     j = 0
-    b1 = buffer.readBlockFromDisk("binary_selection_temp_S" + str(f1))
-    b2 = buffer.readBlockFromDisk("binary_selection_temp_S" + str(f2 + 16))
+    b1 = buffer.readBlockFromDisk("binary_selection_temp_S" + str(file1))
+    b2 = buffer.readBlockFromDisk("binary_selection_temp_S" + str(file2 + 16))
     n = buffer.getNewBlockInBuffer()
-    while f1 != 16 and f2 != 16:
+    while file1 != 16 and file2 != 16:
         if int(buffer.data[b1][2 * i]) < int(buffer.data[b2][2 * j]):
             a = buffer.data[b1][2 * i]
             b = buffer.data[b1][2 * i + 1]
@@ -335,56 +332,56 @@ def merge_sort_S(buffer):
             j += 1
         buffer.data[n].append(a)
         buffer.data[n].append(b)
-        cnt += 1
+        counter += 1
         if i == 7:
-            f1 += 1
+            file1 += 1
             i = 0
-            if f1 < 16:
+            if file1 < 16:
                 buffer.freeBlockInBuffer(b1)
-                b1 = buffer.readBlockFromDisk("binary_selection_temp_S" + str(f1))
+                b1 = buffer.readBlockFromDisk("binary_selection_temp_S" + str(file1))
         if j == 7:
-            f2 += 1
+            file2 += 1
             j = 0
-            if f2 < 16:
+            if file2 < 16:
                 buffer.freeBlockInBuffer(b2)
-                b2 = buffer.readBlockFromDisk("binary_selection_temp_S" + str(f2 + 16))
-        if cnt % 7 == 0:
+                b2 = buffer.readBlockFromDisk("binary_selection_temp_S" + str(file2 + 16))
+        if counter % 7 == 0:
             buffer.writeBlockToDisk("binary_selection_temp2_S" + str(result_num), n)
             n = buffer.getNewBlockInBuffer()
             result_num += 1
-    if f1 == 16:
-        while f2 != 16:
+    if file1 == 16:
+        while file2 != 16:
             a = buffer.data[b2][2 * j]
             b = buffer.data[b2][2 * j + 1]
             buffer.data[n].append(a)
             buffer.data[n].append(b)
             j += 1
-            cnt += 1
+            counter += 1
             if j == 7:
-                f2 += 1
+                file2 += 1
                 j = 0
-                if f2 < 16:
+                if file2 < 16:
                     buffer.freeBlockInBuffer(b2)
-                    b2 = buffer.readBlockFromDisk("binary_selection_temp_S" + str(f2 + 16))
-            if cnt % 7 == 0:
+                    b2 = buffer.readBlockFromDisk("binary_selection_temp_S" + str(file2 + 16))
+            if counter % 7 == 0:
                 buffer.writeBlockToDisk("binary_selection_temp2_S" + str(result_num), n)
                 n = buffer.getNewBlockInBuffer()
                 result_num += 1
-    elif f2 == 16:
-        while f1 != 16:
+    elif file2 == 16:
+        while file1 != 16:
             a = buffer.data[b1][2 * i]
             b = buffer.data[b1][2 * i + 1]
             buffer.data[n].append(a)
             buffer.data[n].append(b)
             i += 1
-            cnt += 1
+            counter += 1
             if i == 7:
-                f1 += 1
+                file1 += 1
                 i = 0
-                if f1 < 16:
+                if file1 < 16:
                     buffer.freeBlockInBuffer(b1)
-                    b1 = buffer.readBlockFromDisk("binary_selection_temp_S" + str(f1))
-            if cnt % 7 == 0:
+                    b1 = buffer.readBlockFromDisk("binary_selection_temp_S" + str(file1))
+            if counter % 7 == 0:
                 buffer.writeBlockToDisk("binary_selection_temp2_S" + str(result_num), n)
                 n = buffer.getNewBlockInBuffer()
                 result_num += 1
@@ -392,9 +389,9 @@ def merge_sort_S(buffer):
         buffer.freeBlockInBuffer(i)
 
 
-def binary_search_S(buffer):
+def binary_search_forS(buffer):
     key = 60
-    cnt = 0
+    counter = 0
     result_num = 0
     for i in range(4):
         buffer.getNewBlockInBuffer()
@@ -403,34 +400,34 @@ def binary_search_S(buffer):
         for i in range(4):
             buffer.freeBlockInBuffer(i)
             buffer.readBlockFromDisk("binary_selection_temp2_S" + str(4 * k + i))
-        if key > get_buffer_data(buffer, 27) or key < get_buffer_data(buffer, 0):
+        if key > get_bufferdata(buffer, 27) or key < get_bufferdata(buffer, 0):
             continue
         first = 0
         len = 28
-        l1 = lower_bound(buffer, key, first, len)
-        l2 = lower_bound(buffer, key + 1, first, len)
+        l1 = low_bound(buffer, key, first, len)
+        l2 = low_bound(buffer, key + 1, first, len)
         for i in range(l1, l2):
             a = buffer.data[i // 7][2 * (i % 7)]
             b = buffer.data[i // 7][2 * (i % 7) + 1]
             buffer.data[n].append(a)
             buffer.data[n].append(b)
             print("Relation_S", a, b)
-            cnt += 1
-            if cnt % 7 == 0:
+            counter += 1
+            if counter % 7 == 0:
                 buffer.writeBlockToDisk("binary_selection_result_S" + str(result_num), n)
                 result_num += 1
                 n = buffer.getNewBlockInBuffer()
-    if cnt % 7 != 0:
+    if counter % 7 != 0:
         buffer.writeBlockToDisk("binary_selection_result_S" + str(result_num), n)
     for i in range(8):
         buffer.freeBlockInBuffer(i)
 
 
 def binary_selection(buffer):
-    merge_sort_R(buffer)
-    binary_search_R(buffer)
-    merge_sort_S(buffer)
-    binary_search_S(buffer)
+    merge_sort_forR(buffer)
+    binary_search_forR(buffer)
+    merge_sort_forS(buffer)
+    binary_search_forS(buffer)
     # for i in range(16):
     #     extmem.dropBlockOnDisk("sort_R" + str(i))
     # for i in range(32):
@@ -440,16 +437,6 @@ def binary_selection(buffer):
     # for i in range(32):
     #     extmem.dropBlockOnDisk("binary_selection_temp_S" + str(i))
     #     extmem.dropBlockOnDisk("binary_selection_temp2_S" + str(i))
-
-    # for i in range(32):
-    #     if i < 8:
-    #         buffer3.readBlockFromDisk("s" + str(i))
-    #     elif i < 16:
-    #         buffer4.readBlockFromDisk("r" + str(i))
-    #     elif i < 24:
-    #         buffer5.readBlockFromDisk("r" + str(i))
-    #     elif i < 32:
-    #         buffer6.readBlockFromDisk("r" + str(i))
 
 
 def project(buffer, relation, attribute):
@@ -468,7 +455,7 @@ def project(buffer, relation, attribute):
         begin = "binary_selection_temp2_S"
 
     # 投影,利用已经排序好的数据去重
-    cnt = 0
+    counter = 0
     n = buffer.getNewBlockInBuffer()
     for i in range(num):
         m = buffer.readBlockFromDisk(begin + str(i))
@@ -479,43 +466,39 @@ def project(buffer, relation, attribute):
             if i == 0 and j == 0:
                 buffer.data[n].append(attr)
                 print("Project:" + relation, "Attribute:" + attribute, attr)
-                cnt += 1
+                counter += 1
             else:
                 if attr != preattr:
                     buffer.data[n].append(attr)
                     print("Project:" + relation, "Attribute:" + attribute, attr)
-                    cnt += 1
+                    counter += 1
                     preattr = attr
                 else:
-                    cnt += 1
+                    counter += 1
 
         buffer.freeBlockInBuffer(m)
-        if cnt % 14 == 0:
-            buffer.writeBlockToDisk("project" + str((cnt - 1) // 14), n)
+        if counter % 14 == 0:
+            buffer.writeBlockToDisk("project" + str((counter - 1) // 14), n)
             n = buffer.getNewBlockInBuffer()
 
 
 def nest_loop_join(buffer):
     print("nest_loop_join:")
-    cnt = 0
+    counter = 0
     # 分一块缓存用来写结果，一块外层循环，六块内层循环
     k = buffer.getNewBlockInBuffer()
     arr_num = buffer.numFreeBlk - 2
-    # print(arr_num)
     for i in range(16 // arr_num + 1):
         for x in range(arr_num):
             buffer.freeBlockInBuffer(x + 1)
-            # print(x)
         mlist = []
         for l in range(arr_num):
             if i * 6 + l < 16:
                 m = int(buffer.readBlockFromDisk("r" + str(i * 6 + l)))
                 mlist.append(m)
-        # print(mlist)
-        for j in range(32):     # 外层循环
+        for j in range(32):  # 外层循环
             n = buffer.readBlockFromDisk("s" + str(j))
-
-            for m in mlist:     # 内层循环
+            for m in mlist:  # 内层循环
                 for ii in range(7):
                     for jj in range(7):
                         if buffer.data[m][ii * 2] == buffer.data[n][jj * 2]:
@@ -523,22 +506,22 @@ def nest_loop_join(buffer):
                             b = buffer.data[m][ii * 2 + 1]
                             c = buffer.data[n][jj * 2]
                             d = buffer.data[n][jj * 2 + 1]
-                            print(a, b, c, d)
+                            print(a, b, d)
                             buffer.data[k].append(a)
                             buffer.data[k].append(b)
                             buffer.data[k].append(c)
                             buffer.data[k].append(d)
-                            cnt += 4
-                            if cnt % 12 == 0:
+                            counter += 4
+                            if counter % 12 == 0:
                                 buffer.data[k].append(0)
                                 buffer.data[k].append(0)
                                 buffer.data[k].append(0)
-                                buffer.data[k].append(cnt / 12)
-                                buffer.writeBlockToDisk("nest_loop_join_result" + str((cnt - 1) // 12), k)
+                                buffer.data[k].append(counter / 12)
+                                buffer.writeBlockToDisk("nest_loop_join_result" + str((counter - 1) // 12), k)
                                 k = buffer.getNewBlockInBuffer()
             buffer.freeBlockInBuffer(n)
-    if cnt % 12 != 0:
-        buffer.writeBlockToDisk("nest_loop_join_result" + str((cnt - 1) / 12), k)
+    if counter % 12 != 0:
+        buffer.writeBlockToDisk("nest_loop_join_result" + str((counter - 1) / 12), k)
     buffer.freeBlockInBuffer(k)
 
 
@@ -563,7 +546,7 @@ def sort_merge_join(buffer):
     k = buffer.getNewBlockInBuffer()
 
     # 计数器
-    cnt = 0
+    counter = 0
 
     # 记录文件数
     f1 = 0
@@ -581,7 +564,6 @@ def sort_merge_join(buffer):
 
     # 扫描R和S一遍
     while True:
-        # print(cnt//4)
         a = int(buffer.data[m][2 * i])
         b = int(buffer.data[m][2 * i + 1])
         c = int(buffer.data[n][2 * j])
@@ -620,12 +602,12 @@ def sort_merge_join(buffer):
                             buffer.data[k].append(b)
                             buffer.data[k].append(c)
                             buffer.data[k].append(d)
-                            print(a, b, c, d)
+                            print(a, b, d)
                             flag = True
                             j += 1
-                            cnt += 4
-                            if cnt % 12 == 0:
-                                buffer.writeBlockToDisk("sort_merge_join_result" + str((cnt - 1) // 12), k)
+                            counter += 4
+                            if counter % 12 == 0:
+                                buffer.writeBlockToDisk("sort_merge_join_result" + str((counter - 1) // 12), k)
                                 k = buffer.getNewBlockInBuffer()
                         if i == 7:
                             i = 0
@@ -685,15 +667,15 @@ def sort_merge_join(buffer):
             buffer.data[k].append(b)
             buffer.data[k].append(c)
             buffer.data[k].append(d)
-            print(a, b, c, d)
+            print(a, b, d)
             if not flag:
                 pre_f2 = f2
                 pre_j = j
             flag = True
             j += 1
-            cnt += 4
-            if cnt % 12 == 0:
-                buffer.writeBlockToDisk("sort_merge_join_result" + str((cnt - 1) // 12), k)
+            counter += 4
+            if counter % 12 == 0:
+                buffer.writeBlockToDisk("sort_merge_join_result" + str((counter - 1) // 12), k)
                 k = buffer.getNewBlockInBuffer()
         if i == 7:
             i = 0
@@ -721,8 +703,8 @@ def sort_merge_join(buffer):
                     else:
                         break
     # 保存最后一块
-    if cnt % 12 != 0:
-        buffer.writeBlockToDisk("sort_merge_join_result" + str((cnt - 1) // 12), k)
+    if counter % 12 != 0:
+        buffer.writeBlockToDisk("sort_merge_join_result" + str((counter - 1) // 12), k)
 
     # 删掉暂存文件
     filename3 = "binary_selection_temp_S"
@@ -739,8 +721,8 @@ def sort_merge_join(buffer):
 
 def hash_join(buffer):
     print("hash_join:")
-    dictR = {}
-    dictS = {}
+    dictforR = {}
+    dictforS = {}
     filename1 = "r"
     filename2 = "s"
     hash = 10
@@ -749,11 +731,11 @@ def hash_join(buffer):
         m = int(buffer.readBlockFromDisk(filename1 + str(i)))
         for j in range(7):
             a = int(buffer.data[m][2 * j])
-            if a % hash in dictR.keys():
-                dictR[a % hash].append((i, j))
+            if a % hash in dictforR.keys():
+                dictforR[a % hash].append((i, j))
             else:
-                dictR[a % hash] = []
-                dictR[a % hash].append((i, j))
+                dictforR[a % hash] = []
+                dictforR[a % hash].append((i, j))
         buffer.freeBlockInBuffer(m)
     # 构造S的哈希
     for i in range(32):
@@ -761,18 +743,18 @@ def hash_join(buffer):
         for j in range(7):
             c = int(buffer.data[n][2 * j])
             # d = buffer.data[n][2 * j + 1]
-            if c % hash in dictS.keys():
-                dictS[c % hash].append((i, j))
+            if c % hash in dictforS.keys():
+                dictforS[c % hash].append((i, j))
             else:
-                dictS[c % hash] = []
-                dictS[c % hash].append((i, j))
+                dictforS[c % hash] = []
+                dictforS[c % hash].append((i, j))
         buffer.freeBlockInBuffer(n)
     # 在哈希桶内排序
     for h in range(hash):
-        if h in dictR.keys():
-            dictR[h] = sorted(dictR[h])
-        if h in dictS.keys():
-            dictS[h] = sorted(dictS[h])
+        if h in dictforR.keys():
+            dictforR[h] = sorted(dictforR[h])
+        if h in dictforS.keys():
+            dictforS[h] = sorted(dictforS[h])
     cnt = 0
     # 用来写的块
     k = buffer.getNewBlockInBuffer()
@@ -780,12 +762,11 @@ def hash_join(buffer):
     for h in range(hash):
         for i in range(8):
             buffer.freeBlockInBuffer(i)
-        if h not in dictR.keys() or h not in dictS.keys():
+        if h not in dictforR.keys() or h not in dictforS.keys():
             continue
-        listR = dictR[h]
-        listS = dictS[h]
+        listR = dictforR[h]
+        listS = dictforS[h]
         for i, r in enumerate(listR):
-            # print(i,r)
             x = r[1]
             m = buffer.readBlockFromDisk(filename1 + str(r[0]))
             a = buffer.data[m][2 * x]
@@ -800,7 +781,7 @@ def hash_join(buffer):
                     buffer.data[k].append(b)
                     buffer.data[k].append(c)
                     buffer.data[k].append(d)
-                    print(a, b, c, d)
+                    print(a, b, d)
                     cnt += 4
                     if cnt % 12 == 0:
                         buffer.writeBlockToDisk("hash_join_result" + str((cnt - 1) // 12), k)
@@ -817,13 +798,13 @@ if __name__ == '__main__':
     # 构造buffer
     buffer = extmem.Buffer(520, 64)
 
-    # # 构造数据
-    # R, S = generateRS()
-    # write_r_to_disk(buffer, R)
-    # write_s_to_disk(buffer, S)
+    # 构造数据
+    R, S = generator()
+    WriteRtoDisk(buffer, R)
+    WriteStoDisk(buffer, S)
 
     # 线性查询
-    liner_selection(buffer)
+    liner_select(buffer)
 
     # 二分查询
     binary_selection(buffer)

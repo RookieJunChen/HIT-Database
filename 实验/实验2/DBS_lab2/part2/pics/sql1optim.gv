@@ -1,0 +1,13 @@
+graph "./pics/sql1optim" {
+	node [shape=plaintext]
+	JOIN
+ -- "SELECT
+ENAME = ’Mary’ "
+	"SELECT
+ENAME = ’Mary’ " -- EMPLOYEE
+	JOIN
+ -- "SELECT
+ DNAME = ’Research’ "
+	"SELECT
+ DNAME = ’Research’ " -- DEPARTMENT
+}

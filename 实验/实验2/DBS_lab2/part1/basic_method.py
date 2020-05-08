@@ -2,27 +2,24 @@ import relations
 import random
 
 
-def randomR():
-    r = relations.R(random.randint(1, 40), random.randint(1, 1000))
-    return r
-
-
-def randomS():
-    s = relations.S(random.randint(20, 60), random.randint(1, 1000))
-    return s
-
-
-def generateRS():
-    R = []
-    S = []
+def generator():
+    r = []
+    s = []
     for i in range(112):
-        R.append(randomR())
+        tmpr = relations.R(random.randint(1, 40), random.randint(1, 1000))
+        while tmpr in r:
+            tmpr = relations.R(random.randint(1, 40), random.randint(1, 1000))
+        r.append(tmpr)
+
     for i in range(224):
-        S.append(randomS())
-    return R, S
+        tmps = relations.S(random.randint(20, 60), random.randint(1, 1000))
+        while tmps in s:
+            tmps = relations.S(random.randint(20, 60), random.randint(1, 1000))
+        s.append(tmps)
+    return r, s
 
 
-def write_r_to_disk(buffer, R):
+def WriteRtoDisk(buffer, R):
     cnt = 0
     write_num = 0
     d = []
@@ -43,7 +40,7 @@ def write_r_to_disk(buffer, R):
             buffer.freeBlockInBuffer(0)
 
 
-def write_s_to_disk(buffer, S):
+def WriteStoDisk(buffer, S):
     cnt = 0
     write_num = 0
     d = []
@@ -62,22 +59,3 @@ def write_s_to_disk(buffer, S):
             write_num += 1
             d = []
             buffer.freeBlockInBuffer(0)
-
-
-def print_R_S(buffer):
-    for i in range(16):
-        addr = "r" + str(i)
-        n = buffer.readBlockFromDisk(addr)
-        for j in range(7):
-            a = buffer.data[n][2 * j]
-            b = buffer.data[n][2 * j + 1]
-            print("Relation_R", a, b)
-        buffer.freeBlockInBuffer(n)
-    for i in range(32):
-        addr = "s" + str(i)
-        n = buffer.readBlockFromDisk(addr)
-        for j in range(7):
-            c = buffer.data[n][2 * j]
-            d = buffer.data[n][2 * j + 1]
-            print("Relation_S", c, d)
-        buffer.freeBlockInBuffer(n)

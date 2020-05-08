@@ -1,0 +1,10 @@
+graph "./pics/sql1" {
+	node [shape=plaintext]
+	"SELECT
+ENAME = ’Mary’ & DNAME = ’Research’ " -- JOIN
+
+	JOIN
+ -- EMPLOYEE
+	JOIN
+ -- DEPARTMENT
+}

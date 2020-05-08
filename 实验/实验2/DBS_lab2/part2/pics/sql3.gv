@@ -1,0 +1,13 @@
+graph "./pics/sql3" {
+	node [shape=plaintext]
+	"SELECT
+ESSN = ’01’ " -- "PROJECTION
+ESSN, PNAME "
+	"PROJECTION
+ESSN, PNAME " -- JOIN
+
+	JOIN
+ -- WORKS_ON
+	JOIN
+ -- PROJECT
+}

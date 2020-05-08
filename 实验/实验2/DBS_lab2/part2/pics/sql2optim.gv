@@ -1,0 +1,22 @@
+graph "./pics/sql2optim" {
+	node [shape=plaintext]
+	"PROJECTION
+BDATE " -- JOIN
+
+	JOIN
+ -- "PROJECTION
+BDATE , DNO"
+	"PROJECTION
+BDATE , DNO" -- "SELECT
+ENAME = ’John’ "
+	"SELECT
+ENAME = ’John’ " -- EMPLOYEE
+	JOIN
+ -- "PROJECTION
+DNO"
+	"PROJECTION
+DNO" -- "SELECT
+ DNAME = ’ Research’ "
+	"SELECT
+ DNAME = ’ Research’ " -- DEPARTMENT
+}

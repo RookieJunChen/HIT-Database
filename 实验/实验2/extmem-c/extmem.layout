@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Debug" />
+	<File name="extmem.c" open="1" top="0" tabpos="2">
+		<Cursor position="729" topLine="18" />
+	</File>
+	<File name="extmem.h" open="1" top="0" tabpos="1">
+		<Cursor position="91" topLine="0" />
+	</File>
+	<File name="test.c" open="1" top="1" tabpos="3">
+		<Cursor position="564" topLine="12" />
+	</File>
+</CodeBlocks_layout_file>

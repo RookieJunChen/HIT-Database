@@ -1,6 +1,14 @@
 import os
 
 
+def dropBlockOnDisk(addr):
+    fileName = "blocks/" + addr + ".blk"
+    if not os.path.exists(fileName):
+        return False
+    os.remove(fileName)
+    return True
+
+
 class Buffer:
     def __init__(self, bufsize, blksize):
         self.numIO = 0
@@ -8,6 +16,7 @@ class Buffer:
         self.blkSize = blksize
         self.numAllBlk = bufsize // (blksize + 1)
         self.numFreeBlk = self.numAllBlk
+        self.blkcount = 0
         self.data = []
         self.used = []
         for i in range(self.numAllBlk):
@@ -50,6 +59,7 @@ class Buffer:
             return False
         line = f.readline()
         line_spilt = line.split(" ")
+        line_spilt = line_spilt[:-1]
         f.close()
         for i in range(self.numAllBlk):
             if self.used[i] == False:
@@ -61,12 +71,14 @@ class Buffer:
 
     def writeBlockToDisk(self, addr, write_num):
         fileName = "blocks/" + str(addr) + ".blk"
+        self.blkcount += 1
         f = open(fileName, "w")
         if not f:
             print("Open File Fail")
             return False
         for i in self.data[write_num]:
             f.write(str(i) + " ")
+        f.write(str(self.blkcount) + " ")
         f.close()
         self.data[write_num] = []
         self.used[write_num] = False
@@ -80,12 +92,3 @@ class Buffer:
             if self.used[i] == False:
                 count += 1
         self.numFreeBlk = count
-
-
-
-def dropBlockOnDisk(addr):
-    fileName = "blocks/" + addr + ".blk"
-    if not os.path.exists(fileName):
-        return False
-    os.remove(fileName)
-    return True

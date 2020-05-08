@@ -1,0 +1,19 @@
+graph "./pics/sql3optim" {
+	node [shape=plaintext]
+	"PROJECTION
+ESSN, PNAME " -- JOIN
+
+	JOIN
+ -- "PROJECTION
+ESSN, PNO"
+	"PROJECTION
+ESSN, PNO" -- "SELECT
+ESSN = ’01’ "
+	"SELECT
+ESSN = ’01’ " -- WORKS_ON
+	JOIN
+ -- "PROJECTION
+ PNAME , PNO"
+	"PROJECTION
+ PNAME , PNO" -- PROJECT
+}

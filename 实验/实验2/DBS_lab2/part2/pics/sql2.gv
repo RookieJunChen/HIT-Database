@@ -1,0 +1,13 @@
+graph "./pics/sql2" {
+	node [shape=plaintext]
+	"PROJECTION
+BDATE " -- "SELECT
+ENAME = ’John’ & DNAME = ’ Research’ "
+	"SELECT
+ENAME = ’John’ & DNAME = ’ Research’ " -- JOIN
+
+	JOIN
+ -- EMPLOYEE
+	JOIN
+ -- DEPARTMENT
+}
